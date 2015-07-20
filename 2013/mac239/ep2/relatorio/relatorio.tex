@@ -1,0 +1,144 @@
+\documentclass[a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[brazil]{babel}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage[colorinlistoftodos]{todonotes}
+
+\title{Relatório Exercício Programa II - Tradução da LPO para LPC}
+\author{
+Fellipe Souto Sampaio \footnote{Número USP: 7990422 e-mail: fellipe.sampaio@usp.com}\\
+Gervásio Protásio dos Santos Neto \footnote{Número USP: 7990996 e-mail: gervasio.neto@usp.br}\\
+}
+\begin{document}
+\maketitle
+
+\begin{center}
+MAC 0239 Métodos Formais em Programação\\
+Prof. Marcelo Finger \\
+             
+\end{center}
+
+\begin{center}
+Instituto de Matemática e Estatística - IME USP \\
+ Rua do Matão 1010 \\
+ 05311-970\, Cidade Universitária, São Paulo - SP \\
+\end{center}
+
+\newpage
+
+\section{Introdução}
+
+Nesse EP realizamos, conforme definido em enunciado, uma tradução de cláusulas definidas em uma forma restrita da Lógica de Primeira Ordem para Lógica Proposicinal Clássica (em formato cnf, semelhante ao padrão DIMACS).\\\\
+Nossa implementação faz a conversão de fórmulas com variáveis e restrições para fórmulas usando os valores cabíveis das variáveis (ou seja, que respeitam as restrições).\\\\
+Dada a opção -c, é gerada também (por pós-processamento) um arquivo no formato .cnf que é compatíveis co SAT Solvers (como o minisat, usado no EP1).\\\\
+A implementação foi feita em linguagem Perl devido as grandes facilidades ofere-cidas pela linguagem no tratamento de strings e de expressão regulares.\\\\
+Usamos principalmente três arquivos: \textit{main.pl, geraCnf.pl, setOfClauses.pm}. O primeiro sendo o código para processamento da entrada e "tradução" das fórmulas, o segundo para converter uma saída para o formato cnf DIMACS e o último um package que dá auxilio e facilita a tradução.
+
+\newpage
+
+\section{Processamento da Entrada}
+
+Para processar a entrada, primeiramene abrimos um \textit{Handle} para o arquivo de entrada de forma a possibilitar sua leitura.\\\\
+Feito isso, percorre-se a entrada linha por linha, identificando se é uma linha que contém a declaração de uma variável ou se contém uma fórmula com seus restritores. Para tal usamos as seguintes expressões regulares:
+\begin{verbatim}
+	^([A-Z]+):\s([0-9]+)\s([0-9]+).$   #identifica declaração de variáveis
+    
+^(-?[a-z]+[\(]([A-Z]+)(,\s*([A-Z]+))*[\)]\s?)+.   #identifica fórmula
+\end{verbatim}
+
+Uma vez encontrada um varíavel, obtemos também seu \textit{range} (os valores que ela pode assumir), e o armazenamos em uma lista. Então, usando a função add-Variable (do objeto \$objeto, uma instância de setOfClauses) inserimos esse par (variável, range) em um hash como, respectivamente, key e conteúdo. Deve-se observar que acessos a essas referências são feitas por meio do objeto do tipo setOfClauses.\\\\
+Se identificamos que uma linha tem o formato de uma fórmula, realizamos a seguinte sequência de passos:
+\begin{enumerate}
+	\item Usando o modificador "g" das expressões regulares Perl, criamos um vetor em que cada entrada é um predicado da fórmula. Criamos também uma referência para tal lista.
+    \item Quebramos a string, separando predicados das restrições.
+    \item Usamos "split" para criar um vetor com as restrições da fórmula. Criamos também uma referência para essa lista.
+    \item Usano a função \textit{addPredicateList} do setOfClauses, criamos uma referência para uma lista que tem em sua posição inicial o vetor de predicados e em sua segunda posição o vetor de restrições. E atualizamos um vetor que contém todas as referéncias desse tipo com essa nova entrada.
+\end{enumerate}
+
+\textbf{IMPORTANTE}: Assumimos que as restrições são separadas POR VÍRGULAS (","). Foi perguntado no PACA se poderiamos assumir isso e o Professor Marcelo Finger disse : "Apesar de ser possível parsear [sic!] a expressão sem as vírgulas, concordo que fica mais fácil e v e todo mundo pode usá-las.
+
+\newpage
+
+\section{Tradução de Fórmulas}
+No pós processamento da entrada acontece a tradução das formulas de LPC em LPO, para isso recorremos  ao objeto \$object e seu método \textit{writeClauses}. O algoritmo utilizado leva em consideração se a cláusula tem ou não restritores, em ambos os casos a base do algoritmo é o mesmo, diferenciando-se quando a clausula precisa ser validada pelos seus restritores. Explicaremos o funcionamento do algoritmo para o caso sem restritores através de um exemplos e expandiremos o caso de restritores com uma pequena resalva ao final.
+
+\subsection{Algoritmo para instanciação}
+
+Considere que temos a seguinte linha para ser processada:
+
+\begin{verbatim}
+X: 1 3.
+Y: 1 2.
+Z: 3 3.
+W: 4 6.
+foo(X,Y) -bar(Z,W) waka(Z,Y).
+\end{verbatim}
+
+,como foi explicado na seção anterior o pré processamento da entrada transformará cada predicado em um elemento em um lista. Essa lista é passada para o método \textit{writePredicates*} que funciona como \textbf{core} da tradução entre as lógicas. Para não tornar a explicação enfadonha apresentaremos a explicação através de passos.
+
+\begin{itemize}
+\item[1]{- Criamos um vetor com todos as variáveis que acontecem na lista de predicado. No nosso caso 
+\begin{verbatim} @variablesList = [X,Y,Z,W] \end{verbatim}}
+\item[2]{- Criamos um vetor com o mesmo tamanho do vetor de variáveis, só que agora seus elementos são o número zero 
+\begin{verbatim} @vec = [0,0,0,0] \end{verbatim}
+Este vetor será nosso vetor de indices.}
+\item[3]{- Criamos outros dois vetores, um com os valores máximos que cada variá-vel pode assumir e outro com os valores mínimos 
+\begin{verbatim} @lowRange = [1,1,3,4] ; @highRange = [3,2,3,6]\end{verbatim}}
+
+\item[4]{- Recriamos a cláusula utilizando o vetor de predicados 
+\begin{verbatim} foo(X,Y) -bar(Z,W) waka(Z,Y). \end{verbatim}}
+\end{itemize}
+
+Após esses 4 passos entramos em dois whiles, continuaremos a explicação dentro do while mais interno:
+
+\begin{itemize}
+\item[5]{- Somamos elemento a elemento @vec com @lowRange com o método \textit{mergeVector} e obtemos @temp 
+\begin{verbatim} @temp = [1,1,3,4] \end{verbatim}}
+\end{itemize}
+Nesse passo utilizamos o método \textit{writePredicates} que tem por função trocar cada ocorrência de uma variável pela sua correspondência na lista @temp. Teriamos por exemplo 
+\begin{verbatim} X -> 1 \end{verbatim}
+essa substituição é realizada iterando dentro de @variablesList com o método \textit{changePredicates}, como produto final teremos
+\begin{verbatim} foo(1,2) -bar(3,4) waka(3,1). \end{verbatim}
+
+essa string instanciada é guardada em um hash como uma key. Em seguida usa-se o método \textit{incrementVector}, nesse método incrementamos o vetor @vec em uma unidade em uma dada posição, no nosso caso seria 
+\begin{verbatim} @vec = [1,0,0,0] \end{verbatim}
+nesse ponto reside um dos grandes truques do algoritmo, antes de somar um elemento no vetor @vec verificamos se a próxima chamada de \textit{incrementVector} pode ser feita sem que o valor nas céluals exceda o limite do @highRange. No nosso caso verificamos se  
+\begin{verbatim} $vec[0] + $lowRange[0] < $highRange[0]\end{verbatim}
+
+respeita essa expressão, no caso positivo o algoritmo repete o laço interno outra vez, caso contrario temos novos passos. Primeiro utilizamos o método \textit{askIfPossible}, que semelhante a \textit{incrementVector} testa se uma soma respeita a expressão anteriormente mencionada, entretanto caso a soma não possa ser realizada, como por exemplo
+
+\begin{verbatim} 
+@vec = [2,0,0,0] 
+$vec[0] + $lowRange[0] < $highRange[0]
+2 + 1 < 3
+\end{verbatim}
+seria falso, portanto chamamos o método \textit{askIfPossible} para o indice seguinte (no caso 1) e testamos a mesma coisa
+
+\begin{verbatim} 
+@vec = [2,0,0,0] 
+$vec[1] + $lowRange[1] < $highRange[1]
+0 + 1 < 2
+\end{verbatim}
+neste caso somamos 1 a posição de indice 1 obtendo
+\begin{verbatim} 
+@vec = [2,1,0,0] 
+\end{verbatim}
+
+
+
+
+
+\section{Geração do CNF}
+Para gerar o arquivo .cnf usamos um arquivo previamente gerado que contém as fórmulas já "traduziadas" para LPO.\\\\
+Primeiro criamos uma lista com todas as linha desse arquivo. Isso é útil pois percorreremos o arquivo mais de uma vez. Aproveitamos para descobrir o tamanho do vetor, que representa o número de disjunções que serão impressas no .cnf\\\\
+Então, para cada linha, por sabermos que cada termo termina em ")", podemos usar a função split para criar um vetor que os contém. Então readicionamos os parênteses perdidos durante o split e nos livramos do ponto presente no fim da linha.\\\\
+Os valores que cada termo terá em na versão CNF é armazenado em um \textit{hash} (imaginativamente chamado de hash). Para inserí-los no hash, percorremos o vetor previamento montado com os termos.\\\\ Se um termo já foi inserido, nada é feito, caso contrário, verificamos se ele é uma negação (tem um menos em sua frente); se esse for o caso, para evitar criar variáveis incorretas, verificamos se sua forma "afirmativa" está no hash, se sim, o termo será dado o valor negativo correspondente; caso contrário, será dado um novo valor. Analogamente, se termo não for uma negação, antes de o inserirmos no hash, verificamos se sua negação já não está lá para evitar criar variáveis erroneamente.\\\\
+Uma vez que já sabemos que valor (mais precisamente, nome) deverá ser dado a cada termo do arquivo em LPC no arquivo .cnf, começamos o processo de criação do arquivo.\\\\
+Primeiramente, descobrimos quantas varíaveis são utilizadas. Então montamos o cabeçalho do .cnf.\\\\
+Então, percorremos novamente o vetor de linhas. Da mesma forma utilizada previamente, criamos para cada linha um vetor com os termos da cláusula. Então identificamos o valor que deverá ser dado àquele termo, e imprimimos isso. Ao termos processado todos os termos do vetor é impresso "0\textbackslash n" para sinalizar o fim da disjunção.
+
+\end{document}

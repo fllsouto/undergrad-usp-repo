@@ -1,0 +1,34 @@
+/*
+ \__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__
+
+
+  Nome:     Fellipe Souto Sampaio
+  NUSP:     7990422
+
+  Prof:     Yoshiharu Kohayakawa
+  Disciplina: MAC0323 - Estrutura de dados
+
+
+   LOCALIZAĆÃO DE PALAVRAS I
+  -client.c
+  -interface.c
+  -interface.h
+  -itemLemma.c
+  -itemLemma.h
+  -itemWord.c
+  -itemword.h
+  -lemmaTree.c
+  -lemmaTree.h
+  -wordTree.c
+  -wordTree.h
+  -readBook.c
+  -readBook.h
+  -RelatórioEP3.pdf
+  -makefile
+
+  Junho de 2013.
+ \__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__
+*/
+
+
+Para Compilar digite no terminal "make ep3"

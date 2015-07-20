@@ -1,0 +1,9 @@
+diagonalprincipal(1) -linha(1, 1) -coluna(1, 1).
+diagonalprincipal(1) -linha(1, 2) -coluna(1, 2).
+diagonalprincipal(1) -linha(1, 3) -coluna(1, 3).
+diagonalprincipal(2) -linha(2, 1) -coluna(2, 1).
+diagonalprincipal(2) -linha(2, 2) -coluna(2, 2).
+diagonalprincipal(2) -linha(2, 3) -coluna(2, 3).
+linha(1, 1) coluna(1, 2).
+linha(1, 2) coluna(1, 3).
+-linha(1, 1) -coluna(2, 2).

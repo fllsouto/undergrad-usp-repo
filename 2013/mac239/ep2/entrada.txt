@@ -1,0 +1,8 @@
+X: 1 5.
+Y: 5 1000.
+RAINHA: 77 77.
+SHITAKE: 0 10000.
+macaco(AJAX,XMEN) macaco(BABAO,MAXIMX) .
+potatos(BATATA, CRYSIS) sepa(WW,KKK) macaco(AJSDLKASLDK,COOOCOCOCOC) . X > Y, X + Z != K.
+macaco(VERME,PUTRETO,C) macaco(BONITA,COXA) dadivadosninjas(ESPADA,OLIMPICA,BONITA).
+macaco(AJAX,XMEN) macaco(BABAO,MAXIMO,MAXIMO) .

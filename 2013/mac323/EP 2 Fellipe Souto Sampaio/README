@@ -1,0 +1,38 @@
+/*
+ \__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__
+
+
+  Nome:     Fellipe Souto Sampaio
+  NUSP:     7990422
+
+  Prof:     Yoshiharu Kohayakawa
+  Disciplina: MAC0323 - Estrutura de dados
+
+
+  LIMIAR DE CONEXIDADE PARA CERTOS GRAFOS GEOMÉTRICOS II
+  -client.c
+  -Instance.c
+  -Instance.h
+  -operation.c
+  -operation.h
+  -Point.h
+  -Point.S.c
+  -Point.C.c
+  -RelatórioEP2.pdf
+  -makefile
+
+  Maio de 2013.
+ \__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__\__
+*/
+
+Instrucão de compilacão:
+
+Descompacte os arquivos em uma pasta e a acesse via terminal Linux. Dentro da pasta execute os comandos:
+
+-make EP2cube
+
+para gerar o executavel cubo, e
+
+-make EP2sphere
+
+para gerar o executavel esfera.
